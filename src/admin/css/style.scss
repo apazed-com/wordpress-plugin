@@ -1,0 +1,136 @@
+// Primary 1
+$descriptor: pink-vivid;
+$primary-1-050: #fdf9f9;
+$primary-1-100: #fdeef5;
+$primary-1-200: #fbcceb;
+$primary-1-300: #fba0db;
+$primary-1-400: #fc65be;
+$primary-1-500: #da127d;
+$primary-1-600: #f82275;
+$primary-1-700: #e01a5b;
+$primary-1-800: #b51744;
+$primary-1-900: #8f1335;
+
+// Neutral 1
+$descriptor: cool-grey;
+$neutral-1-050: #F5F7FA;
+$neutral-1-100: #E4E7EB;
+$neutral-1-200: #CBD2D9;
+$neutral-1-300: #9AA5B1;
+$neutral-1-400: #7B8794;
+$neutral-1-500: #616E7C;
+$neutral-1-600: #52606D;
+$neutral-1-700: #3E4C59;
+$neutral-1-800: #323F4B;
+$neutral-1-900: #1F2933;
+
+// Supporting 1
+$descriptor: purple-vivid;
+$supporting-1-050: #f5f4fa;
+$supporting-1-100: #eee5fa;
+$supporting-1-200: #e0c6f9;
+$supporting-1-300: #d3a6f8;
+$supporting-1-400: #c979f8;
+$supporting-1-500: #c04df8;
+$supporting-1-600: #a732f5;
+$supporting-1-700: #8228e3;
+$supporting-1-800: #690cb0;
+$supporting-1-900: #511e97;
+
+// Supporting 2
+$descriptor: denim-blue;
+$supporting-2-050: #f5f9fc;
+$supporting-2-100: #e8f4fc;
+$supporting-2-200: #cbe0fb;
+$supporting-2-300: #aac6fa;
+$supporting-2-400: #7e9afa;
+$supporting-2-500: #526cf9;
+$supporting-2-600: #3a4af5;
+$supporting-2-700: #303ae0;
+$supporting-2-800: #272eb2;
+$supporting-2-900: #1f268b;
+
+// Supporting 3
+$descriptor: cyan-vivid;
+$supporting-3-050: #f2f9fb;
+$supporting-3-100: #def7f9;
+$supporting-3-200: #b6edf3;
+$supporting-3-300: #82deee;
+$supporting-3-400: #3ec2e7;
+$supporting-3-500: #189fdc;
+$supporting-3-600: #137dc7;
+$supporting-3-700: #1663a2;
+$supporting-3-800: #164c77;
+$supporting-3-900: #143d5c;
+
+// Supporting 4
+$descriptor: red-vivid;
+$supporting-4-050: #fcf8f6;
+$supporting-4-100: #fcf0ed;
+$supporting-4-200: #fad8d7;
+$supporting-4-300: #f9b5b3;
+$supporting-4-400: #f9827b;
+$supporting-4-500: #f9564d;
+$supporting-4-600: #f13632;
+$supporting-4-700: #d1292e;
+$supporting-4-800: #a5212a;
+$supporting-4-900: #821c24;
+
+// Supporting 5
+$descriptor: yellow-vivid;
+$supporting-5-050: #fbf8f2;
+$supporting-5-100: #fbf4dc;
+$supporting-5-200: #f7e7ad;
+$supporting-5-300: #f2d16c;
+$supporting-5-400: #ebad2d;
+$supporting-5-500: #e58712;
+$supporting-5-600: #ce610b;
+$supporting-5-700: #a4490f;
+$supporting-5-800: #7d3814;
+$supporting-5-900: #612d14;
+
+$supporting-dark-lightest: #39404f;
+$supporting-dark-lighter: #2f3645;
+$supporting-dark-light: #252c3b;
+$supporting-dark: #1b2231;
+$supporting-dark-darker: #111827;
+
+.fe-panel {
+    @apply mb-32 mx-8;
+}
+
+.btn {
+    @apply inline-flex items-center px-4 py-2 bg-gradient-to-r from-support1-400 to-support1-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest transition ease-in-out duration-150;
+}
+
+.btn:hover {
+    @apply from-support1-400 to-support1-500;
+    cursor: pointer;
+}
+
+.btn:active {
+    @apply from-support1-500 to-support1-600;
+}
+
+.btn:focus {
+    @apply outline-none border-support1-700 ring-gray-500;
+}
+
+.full-animated-gradient-background {
+    background: linear-gradient(-45deg, $supporting-1-500, $supporting-1-700);
+    background-size: 600% 600%;
+    animation: background-color-animation 15s ease infinite;
+}
+
+
+@keyframes background-color-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
