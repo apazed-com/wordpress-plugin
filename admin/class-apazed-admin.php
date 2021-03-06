@@ -42,11 +42,20 @@ class Apazed_Admin
     private $version;
 
     /**
+     * Prefix for site options
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string $option_prefix
+     */
+    private $option_prefix = 'apazed_v1_';
+
+    /**
      * API Token for API requests
      *
      * @since    1.0.0
      * @access   private
-     * @var      object $token
+     * @var      string $token
      */
     private $token;
 
@@ -85,8 +94,9 @@ class Apazed_Admin
         $this->setArticles();
     }
 
-    private function setPayload() {
-        $rawPayload = get_transient( 'apazed-payload-v2' );
+    private function setPayload()
+    {
+        $rawPayload = get_transient( $this->option_prefix . 'payload' );
 
         if (!$this->payload && $this->token) {
             // get payload from api
@@ -100,11 +110,15 @@ class Apazed_Admin
             ];
             $response = wp_remote_post( $apiUrl, $args );
             $rawPayload = wp_remote_retrieve_body( $response );
-            set_transient( 'apazed-payload-v1', $rawPayload, 300 );
+            if (!APAZED_DEV) set_transient( $this->option_prefix . 'payload', $rawPayload, 300 );
         }
 
         // create consumable payload
-        $this->payload = json_decode($rawPayload);
+        $this->payload = json_decode( $rawPayload );
+
+        if (empty($this->payload)) {
+            $this->payload = new \stdClass();
+        }
 
         $this->payload->connect = new \stdClass();
         $this->payload->connect->token = $this->token;
@@ -112,10 +126,10 @@ class Apazed_Admin
         $this->payload->connect->blogName = get_bloginfo( 'name' );
         $this->payload->connect->apazedConnect = (APAZED_DEV) ? 'http://apazed.test/app/api/token' : 'https://apazed.com/app/api/token';
 
-        if (!isset($this->payload->forms)) {
+        if (!isset( $this->payload->forms )) {
             $this->payload->forms = new \stdClass();
         }
-        if (!isset($this->payload->site)) {
+        if (!isset( $this->payload->site )) {
             $this->payload->site = new \stdClass();
             $this->payload->site->key = false;
         }
@@ -123,6 +137,26 @@ class Apazed_Admin
         // maybe add messages based on payload
         $this->maybeAddMessages();
 
+    }
+
+    private function maybeAddMessages()
+    {
+        if (!isset($this->payload->messages) || !is_array( $this->payload->messages )) {
+            $this->payload->messages = [];
+        }
+        if (isset($this->payload->connection) && is_array($this->payload->connection))
+        $connection = $this->payload->connection[0];
+        if (isset( $connection->account->account->requirements->currently_due ) && count( $connection->account->account->requirements->currently_due )) {
+            $when = ($connection->account->account->requirements->current_deadline) ? ' by ' . date( 'M d, Y', $connection->account->account->requirements->current_deadline ) : '';
+            $this->payload->messages[] = ['note' => sprintf( 'Looks like your account is incomplete and some information is needed, go to your <a href="%s" target="_blank" class="underline hover:cursor-pointer hover:text-primary-600">stripe account</a> to start getting paid.', $when, 'https://dashboard.stripe.com/settings/update' ), 'type' => 'warning'];
+        }
+        if (isset( $connection->account->account->requirements->errors ) && count( $connection->account->account->requirements->errors )) {
+            foreach ($connection->account->account->requirements->errors as $key => $error) {
+                if (isset( $error['reason'] )) {
+                    $this->payload->messages[] = ['note' => $error['reason'], 'type' => 'info'];
+                }
+            }
+        }
     }
 
     private function setArticles()
@@ -138,7 +172,7 @@ class Apazed_Admin
         }
 
         // create consumable payload
-        $this->articles = json_decode($rawArticles);
+        $this->articles = json_decode( $rawArticles );
     }
 
     public function add_menu()
@@ -157,7 +191,7 @@ class Apazed_Admin
     {
         if (isset( $_GET['token'] ) && '' !== $_GET['token']) {
             update_option( $this->option_prefix . 'token', $_GET['token'] );
-            wp_redirect(remove_query_arg('token'));
+            wp_redirect( remove_query_arg( 'token' ) );
         }
     }
 
@@ -180,11 +214,12 @@ class Apazed_Admin
         if ($this->is_apazed_admin()) {
             wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/apazed-admin.css', [], $this->version, 'all' );
         }
+        wp_enqueue_style( $this->plugin_name . '-block', plugin_dir_url( __FILE__ ) . 'css/apazed-block.css', [], $this->version, 'all' );
     }
 
     public function is_apazed_admin()
     {
-        return ($_GET['page'] && $this->plugin_name . '-dashboard' == $_GET['page']);
+        return (isset($_GET['page']) && $this->plugin_name . '-dashboard' == $_GET['page']);
     }
 
     /**
@@ -196,26 +231,48 @@ class Apazed_Admin
     {
         if ($this->is_apazed_admin()) {
             wp_enqueue_script( $this->plugin_name . '-moment', 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js', [], $this->version, false );
-            wp_enqueue_script( $this->plugin_name . '-defer', plugin_dir_url( __FILE__ ) . 'js/apazed-admin.js', [$this->plugin_name . '-moment'], $this->version, false );
+
+            $script_path = 'js/apazed-admin.js';
+            $script_asset_path = trailingslashit( APAZED_PATH ) . 'admin/js/apazed-admin.asset.php';
+            $script_asset = file_exists( $script_asset_path )
+                ? require($script_asset_path)
+                : array('dependencies' => array(), 'version' => filemtime( $script_path ));
+            $script_url = plugins_url( $script_path, __FILE__ );
+            wp_enqueue_script( $this->plugin_name . '-defer', $script_url, array_merge( $script_asset['dependencies'], [$this->plugin_name . '-moment'] ), $script_asset['version'] );
         }
+
+        // block
+        $script_path = 'js/apazed-block.js';
+        $script_asset_path = trailingslashit( APAZED_PATH ) . 'admin/js/apazed-block.asset.php';
+        $script_asset = file_exists( $script_asset_path )
+            ? require($script_asset_path)
+            : array('dependencies' => array(), 'version' => filemtime( $script_path ));
+        $script_url = plugins_url( $script_path, __FILE__ );
+        wp_enqueue_script( $this->plugin_name . '-block', $script_url, $script_asset['dependencies'], $script_asset['version'] );
+
     }
 
-    private function maybeAddMessages()
+    /**
+     * @TODO this should be abstracted but that would mean the payload needs to be accessible.
+     */
+
+    public function register_api_get_forms()
     {
-        if (!is_array($this->payload->messages)) {
-            $this->payload->messages = [];
+        register_rest_route( 'apazed/v1', '/all-forms', array(
+            'methods' => 'GET',
+            'callback' => [$this, 'get_payments_forms'],
+        ) );
+    }
+
+    /**
+     * @return array
+     */
+    public function get_payments_forms()
+    {
+        if (empty($this->payload->forms)) {
+            $this->payload->forms = false;
         }
-        $connection = $this->payload->connection[0];
-        if (isset( $connection->account->account->requirements->currently_due ) && count( $connection->account->account->requirements->currently_due )) {
-            $when = ($connection->account->account->requirements->current_deadline) ? ' by ' . date( 'M d, Y', $connection->account->account->requirements->current_deadline ) : '';
-            $this->payload->messages[] = ['note' => sprintf( 'Looks like your account is incomplete and some information is needed, go to your <a href="%s" target="_blank" class="underline hover:cursor-pointer hover:text-primary-600">stripe account</a> to start getting paid.', $when, 'https://dashboard.stripe.com/settings/update' ), 'type' => 'warning'];
-        }
-        if (isset( $connection->account->account->requirements->errors ) && count( $connection->account->account->requirements->errors )) {
-            foreach ( $connection->account->account->requirements->errors as $key => $error ) {
-                if ( isset( $error['reason'] ) ) {
-                    $this->payload->messages[] = ['note' => $error['reason'], 'type' => 'info'];
-                }
-            }
-        }
+        error_log( print_r($this->payload->forms, true));
+        return $this->payload->forms;
     }
 }

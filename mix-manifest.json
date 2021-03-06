@@ -1,4 +1,7 @@
 {
     "/admin/js/apazed-admin.js": "/admin/js/apazed-admin.js",
+    "/admin/js/apazed-block.js": "/admin/js/apazed-block.js",
+    "/admin/css/apazed-block.css": "/admin/css/apazed-block.css",
+    "/public/css/apazed-public.css": "/public/css/apazed-public.css",
     "/admin/css/apazed-admin.css": "/admin/css/apazed-admin.css"
 }
