@@ -107,10 +107,15 @@ Absolutely! Our Standard plan is free forever. If you want access to premium fea
 
 If you need assistance adding links or buttons to your site, you can contact support or visit our excellent documentation.
 
-== Screenshots ==
+	== Screenshots ==
 
-1. Here is the block editor widget.
-2. Here's a payments form working in any theme.
+For more detailed look, signup free at [apazed.com](https://apazed.com/signup)
+
+1. Getting Started after activation.
+2. The Dashboard
+3. Use the block editor to add new payments forms embeds.
+4. Get paid!
+5. Customizable embed buttons.
 
 == Changelog ==
 
