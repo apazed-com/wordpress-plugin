@@ -49,8 +49,9 @@ var CONF = {
   formSelect: {
     key: 'apazed-payments-select',
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Select Payments Form', 'apazed'),
-    help: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('If the selection is missing a form, you can sync with apazed.com from the dashboard.', 'apazed'),
-    startHelp: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Looks like we still need to get you connected with apazed.com.', 'apazed')
+    help: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('If a form is missing, you can sync with apazed.com from the Apazed dashboard (under settings)', 'apazed'),
+    startHelp: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Oh no! Looks like we you need to connect your site with apazed.com.', 'apazed'),
+    noFormsHelp: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Uh oh! Something went wrong and no forms where found. Make sure to connect with apazed.com, and review your forms.', 'apazed')
   },
   cartCb: {
     key: 'apazed-payments-cart-check',
@@ -231,7 +232,7 @@ function inspectorControls(props) {
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_6__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.PanelRow, {}, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_6__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_4__.SelectControl, {
     key: CONF.formSelect.key,
     label: CONF.formSelect.label,
-    help: DYNAMICSTORE.forms.length > 1 ? CONF.formSelect.help : CONF.formSelect.startHelp,
+    help: DYNAMICSTORE.forms.length > 1 ? CONF.formSelect.help : CONF.formSelect.noFormsHelp,
     options: DYNAMICSTORE.forms,
     value: props.attributes.embedId ? props.attributes.embedId : 0,
     onChange: function onChange(val) {
@@ -284,15 +285,29 @@ function form_selector_opts() {
   return new Promise(function (resolve) {
     _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_7___default()({
       path: APIROUTES.forms
-    }).then(function (forms) {
+    }).then(function (data) {
+      // error handling
+      console.log(data);
+
+      if (data.error) {
+        wp.data.dispatch('core/notices').createNotice('warning', data.error.message, {
+          type: 'snackbar',
+          isDismissible: true,
+          actions: [{
+            url: data.error.url,
+            label: data.error.label
+          }]
+        });
+      }
+
       var opts = [{
         disabled: true,
         label: 'Select an Embed',
         value: 0
       }];
 
-      if (forms.length > 0) {
-        forms.forEach(function (F) {
+      if (data.forms) {
+        data.forms.forEach(function (F) {
           var buttonText = F.buttonTexts.checkout === undefined ? F.name : F.buttonTexts.checkout;
           var cartButtonText = F.buttonTexts.addToCart === undefined ? F.name : F.buttonTexts.addToCart;
           opts.push({

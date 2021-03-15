@@ -1,6 +1,8 @@
 @import 'common';
 
+.entry-content .wp-block-apazed-embed,
 .wp-block-apazed-embed  {
-  background: $red;
-  padding: .2rem;
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
 }

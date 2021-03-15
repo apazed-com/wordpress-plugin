@@ -2,10 +2,10 @@
 	<div>
 
 		<div class="fe-panel mt-8">
-			<account-info :site="site" :connection="connection"/>
+			<account-info v-if="connection" :site="site" :connection="connection"/>
 		</div>
 
-		<div class="fe-panel">
+		<div class="fe-panel" v-if="forms.length">
 			<div class="col-start-1 col-span-12">
 				<div class="inline-block text-xl font-bold text-support1-500 text-gradient-bg">
 					<h3 class="inline">Payments Forms</h3>
@@ -15,6 +15,9 @@
 				</p>
 			</div>
 			<form-list :site="site" :forms="forms" :latest="true"/>
+		</div>
+		<div v-else>
+			<cta-create-form :site="site" />
 		</div>
 
 		<div class="fe-panel">
@@ -48,10 +51,11 @@
 import FormList from "../components/FormsList";
 import AccountInfo from "../components/AccountInfo";
 import ArticlesList from "../components/ArticlesList";
+import CtaCreateForm from "./../components/CtaCreateForm";
 
 export default {
 	name: "dashboard",
-	components: {ArticlesList, AccountInfo, FormList},
+	components: {ArticlesList, AccountInfo, FormList, CtaCreateForm},
 	props: ['site', 'forms', 'connection', 'articles'],
 }
 </script>

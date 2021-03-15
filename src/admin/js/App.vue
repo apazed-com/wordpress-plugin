@@ -94,19 +94,19 @@ export default {
 	},
 	computed: {
 		messages() {
-			return this.apazed.messages
+			return (this.apazed.messages) ? this.apazed.messages : null
 		},
 		site() {
-			return this.apazed.site
+			return (this.apazed.site) ? this.apazed.site : null
 		},
 		connect() {
-			return this.apazed.connect
+			return (this.apazed.connect) ? this.apazed.connect : null
 		},
 		connection() {
-			return this.apazed.connection[0].account
+			return (this.apazed.connection === undefined) ? null : this.apazed.connection[0].account
 		},
 		forms() {
-			return this.apazed.forms
+			return (this.apazed.forms) ? this.apazed.forms : null
 		},
 		currentPageName() {
 			if ('start' === this.currentPage) return 'Getting Started';

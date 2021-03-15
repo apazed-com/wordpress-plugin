@@ -48,7 +48,7 @@ class Apazed_Admin
      * @access   private
      * @var      string $option_prefix
      */
-    private $option_prefix = 'apazed_v1_';
+    private $option_prefix = 'apazed_v8_';
 
     /**
      * API Token for API requests
@@ -89,6 +89,7 @@ class Apazed_Admin
         $this->plugin_name = $plugin_name;
         $this->version = $version;
         $this->token = get_option( $this->option_prefix . 'token', false );
+        //$this->token = false;
 
         $this->setPayload();
         $this->setArticles();
@@ -98,18 +99,27 @@ class Apazed_Admin
     {
         $rawPayload = get_transient( $this->option_prefix . 'payload' );
 
-        if (!$this->payload && $this->token) {
+        if ((!$this->payload && $this->token)) {
             // get payload from api
             $apiUrl = (APAZED_DEV) ? 'http://apazed.test/api/app/payload' : 'https://apazed.com/api/app/payload';
             $args = [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->token,
+                    'Accept' => 'application/json',
                 ],
                 'method' => 'POST',
                 'body' => ['site' => $_SERVER['SERVER_NAME']]
             ];
             $response = wp_remote_post( $apiUrl, $args );
+            // token is bad
+            if (wp_remote_retrieve_response_code( $response ) === 401) {
+                $this->payload = false;
+                $this->token = !(update_option( $this->option_prefix . 'token', false ));
+                // rerun, to set the connect payload
+                $this->setPayload();
+            }
             $rawPayload = wp_remote_retrieve_body( $response );
+
             if (!APAZED_DEV) set_transient( $this->option_prefix . 'payload', $rawPayload, 300 );
         }
 
@@ -139,6 +149,11 @@ class Apazed_Admin
 
     }
 
+    private function getConnectUrl() {
+        $apazedCom = (APAZED_DEV) ? 'http://apazed.test/app/api/token' : 'https://apazed.com/app/api/token';
+        return add_query_arg( ['name' => get_bloginfo( 'name' ), 'return_url' => admin_url( 'options-general.php?page=apazed-dashboard' ) ], $apazedCom);
+    }
+
     private function maybeAddMessages()
     {
         if (!isset($this->payload->messages) || !is_array( $this->payload->messages )) {
@@ -153,7 +168,7 @@ class Apazed_Admin
         if (isset( $connection->account->account->requirements->errors ) && count( $connection->account->account->requirements->errors )) {
             foreach ($connection->account->account->requirements->errors as $key => $error) {
                 if (isset( $error['reason'] )) {
-                    $this->payload->messages[] = ['note' => $error['reason'], 'type' => 'info'];
+                    $this->payload->messages[] = ['note' => wp_filter_post_kses($error['reason']), 'type' => 'info'];
                 }
             }
         }
@@ -190,8 +205,8 @@ class Apazed_Admin
     public function check_for_returned_token()
     {
         if (isset( $_GET['token'] ) && '' !== $_GET['token']) {
-            update_option( $this->option_prefix . 'token', $_GET['token'] );
-            wp_redirect( remove_query_arg( 'token' ) );
+            update_option( $this->option_prefix . 'token', sanitize_text_field($_GET['token']) );
+            wp_redirect( remove_query_arg( ['token', 'uid'] ) );
         }
     }
 
@@ -230,7 +245,7 @@ class Apazed_Admin
     public function enqueue_scripts()
     {
         if ($this->is_apazed_admin()) {
-            wp_enqueue_script( $this->plugin_name . '-moment', 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js', [], $this->version, false );
+            wp_enqueue_script( 'moment', plugins_url( 'js/moment.min.js', __FILE__ ), [], '2.29.1', false );
 
             $script_path = 'js/apazed-admin.js';
             $script_asset_path = trailingslashit( APAZED_PATH ) . 'admin/js/apazed-admin.asset.php';
@@ -238,7 +253,7 @@ class Apazed_Admin
                 ? require($script_asset_path)
                 : array('dependencies' => array(), 'version' => filemtime( $script_path ));
             $script_url = plugins_url( $script_path, __FILE__ );
-            wp_enqueue_script( $this->plugin_name . '-defer', $script_url, array_merge( $script_asset['dependencies'], [$this->plugin_name . '-moment'] ), $script_asset['version'] );
+            wp_enqueue_script( $this->plugin_name . '-defer', $script_url, array_merge( $script_asset['dependencies'], [] ), $script_asset['version'] );
         }
 
         // block
@@ -265,14 +280,28 @@ class Apazed_Admin
     }
 
     /**
-     * @return array
+     * @return array|false|string
      */
     public function get_payments_forms()
     {
-        if (empty($this->payload->forms)) {
-            $this->payload->forms = false;
+        if (!$this->token) {
+            return [
+                'error' => [
+                    'message' => __('Not connected to Apazed.com.'),
+                    'label' => __('Connect','apazed'),
+                    'url' => $this->getConnectUrl()
+                ]
+            ];
         }
-        error_log( print_r($this->payload->forms, true));
-        return $this->payload->forms;
+        if (empty($this->payload->forms)) {
+            return [
+                'error' => [
+                    'message' => __('No Apazed payments forms found.'),
+                    'label' => __('Review & Create','apazed'),
+                    'url' => admin_url( 'options-general.php?page=apazed-dashboard' )
+                ]
+            ];
+        }
+        return ['forms' => $this->payload->forms ];
     }
 }
