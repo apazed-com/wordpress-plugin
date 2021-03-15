@@ -286,9 +286,6 @@ function form_selector_opts() {
     _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_7___default()({
       path: APIROUTES.forms
     }).then(function (data) {
-      // error handling
-      console.log(data);
-
       if (data.error) {
         wp.data.dispatch('core/notices').createNotice('warning', data.error.message, {
           type: 'snackbar',
@@ -306,7 +303,7 @@ function form_selector_opts() {
         value: 0
       }];
 
-      if (data.forms) {
+      if (data.forms && data.forms.length) {
         data.forms.forEach(function (F) {
           var buttonText = F.buttonTexts.checkout === undefined ? F.name : F.buttonTexts.checkout;
           var cartButtonText = F.buttonTexts.addToCart === undefined ? F.name : F.buttonTexts.addToCart;

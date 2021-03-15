@@ -238,8 +238,6 @@ function form_selector_opts() {
         function (resolve) {
             apiFetch({path: APIROUTES.forms}).then(function (data) {
 
-                // error handling
-                console.log(data);
                 if (data.error) {
                     wp.data.dispatch('core/notices').createNotice(
                         'warning',
@@ -258,7 +256,7 @@ function form_selector_opts() {
                 }
 
                 let opts = [{disabled: true, label: 'Select an Embed', value: 0}];
-                if (data.forms) {
+                if (data.forms && data.forms.length) {
                     data.forms.forEach(function (F) {
                         let buttonText = ((F.buttonTexts.checkout) === undefined) ? F.name : F.buttonTexts.checkout;
                         let cartButtonText = ((F.buttonTexts.addToCart) === undefined) ? F.name : F.buttonTexts.addToCart;
