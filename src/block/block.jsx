@@ -105,7 +105,7 @@ registerBlockType('apazed/embed', {
         </switch>
     </svg>,
     title: __('Apazed Form', 'apazed'),
-    category: 'embeds',
+    category: 'widgets',
     keywords: [
         __('payments-form — Apazed Form'),
         __('Apazed Embed'),

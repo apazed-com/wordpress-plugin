@@ -13,7 +13,7 @@
 					</div>
 					<div class="ml-3">
 						<p class="text-sm font-medium text-green-800">
-							Successfully connected
+							Successfully connected with apazed.com.
 						</p>
 					</div>
 				</div>

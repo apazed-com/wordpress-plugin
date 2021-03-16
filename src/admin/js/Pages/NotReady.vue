@@ -1,5 +1,6 @@
 <template>
 	<div class="fe-panel">
+
 		<div class="bg-neutral-50 max-w-7xl mx-auto px-12 py-8 mt-8">
 			<h2 class="text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl">
 				<span class="block">Sorry.</span>

@@ -48,7 +48,7 @@ class Apazed_Admin
      * @access   private
      * @var      string $option_prefix
      */
-    private $option_prefix = 'apazed_v8_';
+    private $option_prefix = 'apazed_v9_';
 
     /**
      * API Token for API requests
@@ -107,8 +107,7 @@ class Apazed_Admin
                     'Authorization' => 'Bearer ' . $this->token,
                     'Accept' => 'application/json',
                 ],
-                'method' => 'POST',
-                'body' => ['site' => $_SERVER['SERVER_NAME']]
+                'method' => 'POST'
             ];
             $response = wp_remote_post( $apiUrl, $args );
             // token is bad
@@ -126,7 +125,7 @@ class Apazed_Admin
         // create consumable payload
         $this->payload = json_decode( $rawPayload );
 
-        if (empty($this->payload)) {
+        if (empty( $this->payload )) {
             $this->payload = new \stdClass();
         }
 
@@ -149,26 +148,28 @@ class Apazed_Admin
 
     }
 
-    private function getConnectUrl() {
-        $apazedCom = (APAZED_DEV) ? 'http://apazed.test/app/api/token' : 'https://apazed.com/app/api/token';
-        return add_query_arg( ['name' => get_bloginfo( 'name' ), 'return_url' => admin_url( 'options-general.php?page=apazed-dashboard' ) ], $apazedCom);
-    }
-
     private function maybeAddMessages()
     {
-        if (!isset($this->payload->messages) || !is_array( $this->payload->messages )) {
+        if (!isset( $this->payload->messages ) || !is_array( $this->payload->messages )) {
             $this->payload->messages = [];
         }
-        if (isset($this->payload->connection) && is_array($this->payload->connection))
-        $connection = $this->payload->connection[0];
-        if (isset( $connection->account->account->requirements->currently_due ) && count( $connection->account->account->requirements->currently_due )) {
-            $when = ($connection->account->account->requirements->current_deadline) ? ' by ' . date( 'M d, Y', $connection->account->account->requirements->current_deadline ) : '';
-            $this->payload->messages[] = ['note' => sprintf( 'Looks like your account is incomplete and some information is needed, go to your <a href="%s" target="_blank" class="underline hover:cursor-pointer hover:text-primary-600">stripe account</a> to start getting paid.', $when, 'https://dashboard.stripe.com/settings/update' ), 'type' => 'warning'];
+
+        if ( isset($this->payload->site->url) && empty( $this->payload->connection ) ) {
+            $this->payload->messages[] = ['note' => sprintf( 'Successfully connected to apazed.com without a connection to Stripe. <a href="%1$s" target="_blank" class="underline hover:cursor-pointer hover:text-primary-600">Connect with stripe</a> before continuing.', $this->payload->site->url ), 'type' => 'warning'];
         }
-        if (isset( $connection->account->account->requirements->errors ) && count( $connection->account->account->requirements->errors )) {
-            foreach ($connection->account->account->requirements->errors as $key => $error) {
-                if (isset( $error['reason'] )) {
-                    $this->payload->messages[] = ['note' => wp_filter_post_kses($error['reason']), 'type' => 'info'];
+
+        if (isset( $this->payload->connection ) && !empty( $this->payload->connection )) {
+            $connection = $this->payload->connection[0];
+
+            if (isset( $connection->account->account->requirements->currently_due ) && count( $connection->account->account->requirements->currently_due )) {
+                $when = ($connection->account->account->requirements->current_deadline) ? ' by ' . date( 'M d, Y', $connection->account->account->requirements->current_deadline ) : '';
+                $this->payload->messages[] = ['note' => sprintf( 'Looks like your account is incomplete and some information is needed, go to your <a href="%2$s" target="_blank" class="underline hover:cursor-pointer hover:text-primary-600">stripe account</a> to start getting paid.', $when, 'https://dashboard.stripe.com/settings/update' ), 'type' => 'warning'];
+            }
+            if (isset( $connection->account->account->requirements->errors ) && count( $connection->account->account->requirements->errors )) {
+                foreach ($connection->account->account->requirements->errors as $key => $error) {
+                    if (isset( $error['reason'] )) {
+                        $this->payload->messages[] = ['note' => wp_filter_post_kses( $error['reason'] ), 'type' => 'info'];
+                    }
                 }
             }
         }
@@ -205,7 +206,7 @@ class Apazed_Admin
     public function check_for_returned_token()
     {
         if (isset( $_GET['token'] ) && '' !== $_GET['token']) {
-            update_option( $this->option_prefix . 'token', sanitize_text_field($_GET['token']) );
+            update_option( $this->option_prefix . 'token', sanitize_text_field( $_GET['token'] ) );
             wp_redirect( remove_query_arg( ['token', 'uid'] ) );
         }
     }
@@ -225,7 +226,7 @@ class Apazed_Admin
 
     public function is_apazed_admin()
     {
-        return (isset($_GET['page']) && $this->plugin_name . '-dashboard' == $_GET['page']);
+        return (isset( $_GET['page'] ) && $this->plugin_name . '-dashboard' == $_GET['page']);
     }
 
     /**
@@ -277,21 +278,27 @@ class Apazed_Admin
         if (!$this->token) {
             return [
                 'error' => [
-                    'message' => __('Not connected to Apazed.com.'),
-                    'label' => __('Connect','apazed'),
+                    'message' => __( 'Not connected to Apazed.com.' ),
+                    'label' => __( 'Connect', 'apazed' ),
                     'url' => $this->getConnectUrl()
                 ]
             ];
         }
-        if (empty($this->payload->forms)) {
+        if (empty( $this->payload->forms )) {
             return [
                 'error' => [
-                    'message' => __('No Apazed payments forms found.'),
-                    'label' => __('Review & Create','apazed'),
+                    'message' => __( 'No Apazed payments forms found.' ),
+                    'label' => __( 'Review & Create', 'apazed' ),
                     'url' => admin_url( 'options-general.php?page=apazed-dashboard' )
                 ]
             ];
         }
-        return ['forms' => $this->payload->forms ];
+        return ['forms' => $this->payload->forms];
+    }
+
+    private function getConnectUrl()
+    {
+        $apazedCom = (APAZED_DEV) ? 'http://apazed.test/app/api/token' : 'https://apazed.com/app/api/token';
+        return add_query_arg( ['name' => get_bloginfo( 'name' ), 'return_url' => admin_url( 'options-general.php?page=apazed-dashboard' )], $apazedCom );
     }
 }

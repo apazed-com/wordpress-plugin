@@ -46,11 +46,12 @@
 					<forms v-if="'forms' === currentPage" :site="site" :forms="forms"/>
 
 					<!-- Site Settings -->
-					<not-ready v-if="'site' === currentPage" :urlPrimary="site.url">
+					<not-ready v-if="'site' === currentPage && connection" :urlPrimary="site.url">
 						<template #details>That doesn't mean you can't manage your site. You can head over to apazed.com
 							and view and edit all of your site settings.
 						</template>
 					</not-ready>
+					<cta-needs-connection v-else-if="'site' === currentPage" :site="site" class="fe-panel"/>
 
 					<!-- Profile -->
 					<not-ready v-if="'profile' === currentPage" :urlPrimary="'https://apazed.com/user/profile'">
@@ -78,9 +79,10 @@ import Start from "./Pages/Start";
 import CtaConnect from "./components/CtaConnect";
 import NotReady from "./Pages/NotReady";
 import Articles from "./Pages/Articles";
+import CtaNeedsConnection from "./components/CtaNeedsConnection";
 
 export default {
-	components: {Articles, NotReady, CtaConnect, Start, Dashboard, Messages, Navigation, AppLayout, Forms},
+	components: {Articles, NotReady, CtaConnect, Start, Dashboard, Messages, Navigation, AppLayout, Forms, CtaNeedsConnection},
 	props: ['apazed','articles'],
 	data() {
 		return {
@@ -103,7 +105,7 @@ export default {
 			return (this.apazed.connect) ? this.apazed.connect : null
 		},
 		connection() {
-			return (this.apazed.connection === undefined) ? null : this.apazed.connection[0].account
+			return (this.apazed.connection.length) ? this.apazed.connection[0].account : null
 		},
 		forms() {
 			return (this.apazed.forms) ? this.apazed.forms : null

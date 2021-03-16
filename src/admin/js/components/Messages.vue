@@ -21,7 +21,7 @@
 				</div>
 			</div>
 			<div
-				v-if="message.type === 'success'"
+				v-else-if="message.type === 'success'"
 				class="rounded-md bg-green-50 p-4">
 				<div class="flex">
 					<div class="flex-shrink-0">
@@ -41,7 +41,7 @@
 			</div>
 			<div
 				v-else
-				class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+				class="rounded-md bg-yellow-50 p-4">
 				<div class="flex">
 					<div class="flex-shrink-0">
 						<svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"

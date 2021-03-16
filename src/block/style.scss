@@ -2,7 +2,20 @@
 
 .entry-content .wp-block-apazed-embed,
 .wp-block-apazed-embed  {
-  display: inline-flex;
+  display: flex;
   margin: 0;
   padding: 0;
+}
+
+.entry-content .wp-block-apazed-embed.inline-flex {
+  display: inline-flex;
+}
+.entry-content .wp-block-apazed-embed.inline-block {
+  display: inline-block;
+}
+.entry-content .wp-block-apazed-embed.inline {
+  display: inline;
+}
+.entry-content .wp-block-apazed-embed.block {
+  display: block;
 }

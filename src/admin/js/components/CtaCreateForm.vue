@@ -9,14 +9,14 @@
 				<div class="inline-flex rounded-md shadow">
 					<a
 						:href="site.url+'/forms/create'"
-						class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-support1-600 hover:bg-support1-700">
+						class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-support1-600 hover:bg-support1-700 hover:text-neutral-50">
 						Create
 					</a>
 				</div>
 				<div class="ml-3 inline-flex">
 					<a href="https://apazed.com"
 					   target="_blank"
-					   class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-support1-700 bg-support1-100 hover:bg-support1-200">
+					   class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-support1-700 bg-support1-100 hover:bg-support1-200 hover:text-neutral-50">
 						Learn more
 					</a>
 				</div>
