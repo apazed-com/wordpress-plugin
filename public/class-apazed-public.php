@@ -69,22 +69,13 @@ class Apazed_Public {
 	 * @since    1.0.0
 	 */
 	public function enqueue_scripts() {
+	    $handle = 'apazed-sdk|defer';
 		if (APAZED_DEV) {
-		    wp_enqueue_script( 'apazed-sdk', 'http://apazed.test/sdk/v1/js', array(), $this->version, false );
+		    wp_enqueue_script( $handle, 'http://apazed.test/sdk/v1/js', array(), $this->version, false );
         }
 		else {
-		    wp_enqueue_script( 'apazed-sdk', 'https://apazed.com/sdk/v1/js', array(), $this->version, false );
+		    wp_enqueue_script( $handle, 'https://apazed.com/sdk/v1/js', array(), $this->version, false );
         }
-
 	}
-
-    public function add_asyncdefer_attribute($tag, $handle)
-    {
-        if (strpos( $handle, 'apazed-sdk' ) !== false) {
-            // return the tag with the defer attribute
-            return str_replace( '<script ', '<script defer ', $tag );
-        }
-        return $tag;
-    }
 
 }

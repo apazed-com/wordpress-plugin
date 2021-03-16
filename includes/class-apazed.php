@@ -74,6 +74,7 @@ class Apazed
         $this->set_locale();
         $this->define_admin_hooks();
         $this->define_public_hooks();
+        $this->define_shared_hooks();
     }
 
     /**
@@ -149,6 +150,18 @@ class Apazed
     }
 
     /**
+     * Register all of the hooks related to the admin and public area functionality
+     * of the plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
+    private function define_shared_hooks()
+    {
+        $this->loader->add_filter( 'script_loader_tag', $this, 'filter_script_loader_tag', 10, 3 );
+    }
+
+    /**
      * Register all of the hooks related to the admin area functionality
      * of the plugin.
      *
@@ -166,8 +179,6 @@ class Apazed
         $this->loader->add_action( 'admin_menu', $plugin_admin, 'add_menu' );
 
         $this->loader->add_action( 'admin_init', $plugin_admin, 'check_for_returned_token' );
-
-        $this->loader->add_filter('script_loader_tag', $plugin_admin, 'add_asyncdefer_attribute', 10, 2);
 
         $this->loader->add_action( 'rest_api_init', $plugin_admin, 'register_api_get_forms' );
 
@@ -211,9 +222,7 @@ class Apazed
         $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
         $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
-        $this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
-        $this->loader->add_filter('script_loader_tag', $plugin_public, 'add_asyncdefer_attribute', 10, 2);
     }
 
     /**
@@ -236,4 +245,36 @@ class Apazed
     {
         return $this->loader;
     }
+
+    /**
+     * Filter script tags for async or defer attributes.
+     *
+     * Append '--async' or/and '--defer' to your script handle to add the appropriate tags to the script tag.
+     * This is inspired by: TwentyTwenty_Script_Loader && https://github.com/mindkomm/theme-lib-script-loader-tags/blob/master/lib/filters.php.
+     *
+     * @since 1.0.0
+     */
+    public function filter_script_loader_tag($tag, $handle, $src)
+    {
+        $attrs = [
+            '|async' => 'async',
+            '|defer' => 'defer',
+            '|module' => 'type="module"',
+            '|nomodule' => 'nomodule'
+        ];
+
+        foreach ($attrs as $search => $attr) {
+            if (strpos( $handle, $search ) > -1) {
+
+				// Prevent adding attribute when already added in #12009.
+				if ( ! preg_match( ":\s$attr(=|>|\s):", $tag ) ) {
+                    $tag = str_replace( $search, '', $tag );
+					$tag = preg_replace( ':(?=></script>):', " $attr", $tag, 1 );
+				}
+            }
+        }
+
+        return $tag;
+    }
+
 }

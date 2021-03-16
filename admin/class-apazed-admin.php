@@ -210,15 +210,6 @@ class Apazed_Admin
         }
     }
 
-    public function add_asyncdefer_attribute($tag, $handle)
-    {
-        if (strpos( $handle, $this->plugin_name . '-defer' ) !== false) {
-            // return the tag with the defer attribute
-            return str_replace( '<script ', '<script defer ', $tag );
-        }
-        return $tag;
-    }
-
     /**
      * Register the stylesheets for the admin area.
      *
@@ -253,7 +244,7 @@ class Apazed_Admin
                 ? require($script_asset_path)
                 : array('dependencies' => array(), 'version' => filemtime( $script_path ));
             $script_url = plugins_url( $script_path, __FILE__ );
-            wp_enqueue_script( $this->plugin_name . '-defer', $script_url, array_merge( $script_asset['dependencies'], [] ), $script_asset['version'] );
+            wp_enqueue_script( $this->plugin_name . '|defer', $script_url, array_merge( $script_asset['dependencies'], [] ), $script_asset['version'] );
         }
 
         // block
@@ -264,7 +255,6 @@ class Apazed_Admin
             : array('dependencies' => array(), 'version' => filemtime( $script_path ));
         $script_url = plugins_url( $script_path, __FILE__ );
         wp_enqueue_script( $this->plugin_name . '-block', $script_url, $script_asset['dependencies'], $script_asset['version'] );
-
     }
 
     /**

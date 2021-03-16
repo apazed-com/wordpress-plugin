@@ -10,7 +10,8 @@
     "watch": "mix watch",
     "watch-poll": "mix watch -- --watch-options-poll=1000",
     "hot": "mix watch --hot",
-    "production": "mix --production"
+    "production": "mix --production",
+    "build": "npm run production && mkdir -p ../apazed-build && rsync -aP --exclude 'node_modules' --exclude=.DS_Store --exclude 'webpack.mix.js' --exclude 'tailwind.js' --exclude 'package.json' --exclude 'package-lock.json' --exclude 'mix-manifest.json' --exclude 'src' * ../apazed-build && zip -r ../apazed.zip ../apazed-build"
   },
   "author": "Dan Cameron <dan@apazed.com>",
   "license": "MIT",
