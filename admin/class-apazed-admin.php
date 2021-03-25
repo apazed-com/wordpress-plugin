@@ -89,7 +89,7 @@ class Apazed_Admin
         $this->plugin_name = $plugin_name;
         $this->version = $version;
         $this->token = get_option( $this->option_prefix . 'token', false );
-        //$this->token = false;
+        $this->token = false;
 
         $this->setPayload();
         $this->setArticles();
@@ -135,6 +135,12 @@ class Apazed_Admin
         $this->payload->connect->blogName = get_bloginfo( 'name' );
         $this->payload->connect->apazedConnect = (APAZED_DEV) ? 'http://apazed.test/app/api/token' : 'https://apazed.com/app/api/token';
 
+        if (!$this->token) {
+            $this->payload->connect->wpApiUrl = get_rest_url( null, 'apazed/v1/signup-info' );
+            require_once( ABSPATH . 'wp-includes/pluggable.php' );
+            $this->payload->connect->nonce = wp_create_nonce( 'wp_rest' );
+        }
+
         if (!isset( $this->payload->forms )) {
             $this->payload->forms = new \stdClass();
         }
@@ -154,7 +160,7 @@ class Apazed_Admin
             $this->payload->messages = [];
         }
 
-        if ( isset($this->payload->site->url) && empty( $this->payload->connection ) ) {
+        if (isset( $this->payload->site->url ) && empty( $this->payload->connection )) {
             $this->payload->messages[] = ['note' => sprintf( 'Successfully connected to apazed.com without a connection to Stripe. <a href="%1$s" target="_blank" class="underline hover:cursor-pointer hover:text-primary-600">Connect with stripe</a> before continuing.', $this->payload->site->url ), 'type' => 'warning'];
         }
 
@@ -267,7 +273,29 @@ class Apazed_Admin
         register_rest_route( 'apazed/v1', '/all-forms', array(
             'methods' => 'GET',
             'callback' => [$this, 'get_payments_forms'],
+            'show_in_index' => false
         ) );
+        register_rest_route( 'apazed/v1', '/signup-info', array(
+            'methods' => 'GET',
+            'callback' => [$this, 'get_signup_info'],
+            'show_in_index' => false
+        ) );
+    }
+
+    /**
+     * @return stdClass
+     */
+    public function get_signup_info($request)
+    {
+        $uid = $request->get_header('x-a-uid');
+        $signup = new \stdClass();
+        $current_user = wp_get_current_user();
+        $signup->uid = $uid;
+        $signup->siteUrl = get_bloginfo( 'url' );
+        $signup->blogName = get_bloginfo( 'name' );
+        $signup->name = openssl_encrypt( $current_user->user_nicename, 'aes256', $uid, 0, 4242424242424242 );
+        $signup->email = openssl_encrypt( $current_user->user_email, 'aes256', $uid, 0, 4242424242424242 );
+        return $signup;
     }
 
     /**

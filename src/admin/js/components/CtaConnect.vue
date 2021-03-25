@@ -3,28 +3,51 @@
 		<div class="bg-neutral-50 max-w-7xl mx-auto px-12 py-8 mt-8">
 			<h2 class="text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl">
 				<span class="block"><slot name="heading">Ready to dive in?</slot></span>
-				<span class="block text-support1-600"><slot name="subheading">Connect your site with Apazed.</slot></span>
+				<span class="block text-support1-600"><slot
+					name="subheading">Connect your site with Apazed.</slot></span>
 			</h2>
 			<div class="mt-8 flex">
 				<div class="inline-flex rounded-md shadow">
-					<form :action="connect.apazedConnect" method="GET">
-						<input type="hidden" name="name" :value="connect.blogName">
-						<input type="hidden" name="return_url"
-						       :value="connect.returnUrl">
-						<button
-							type="submit"
-							class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-support1-600 hover:bg-support1-700 hover:text-neutral-50">
-							Get started
-						</button>
-					</form>
+					<button
+						:disabled="isProcessing"
+						@click="getHashKey"
+						class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-support1-600 hover:bg-support1-700 hover:text-neutral-50">
+						Get started
+						<span v-if="isProcessing" class="animate-spin-slow ml-2">
+							<svg
+								class="h-5 w-5 place-self-center"
+								style="transform: scale(-1,1)"
+								fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+								      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+							</svg>
+						</span>
+					</button>
 				</div>
-				<div class="ml-3 inline-flex">
+				<div v-if="status === ''" class="ml-3 inline-flex">
 					<a href="https://apazed.com"
 					   target="_blank"
 					   class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-support1-700 bg-support1-100 hover:bg-support1-200 hover:text-neutral-50">
 						Learn more
 					</a>
 				</div>
+				<div class="ml-3 inline-flex">
+					<span class="inline-flex items-center justify-center px-5 py-3 text-neutral-500 font-medium animate-pulse">
+						{{ status }}
+					</span>
+				</div>
+			</div>
+			<div class="mt-4 flex">
+				<form id="connectForm" :action="connect.apazedConnect">
+					<input type="hidden" name="name" :value="connect.blogName">
+					<input type="hidden" name="return_url"
+					       :value="connect.returnUrl">
+					<button
+						type="submit"
+						class="inline-flex items-center justify-center text-xs text-neutral-600 underline">
+						Sign up directly with a different email at apazed.com
+					</button>
+				</form>
 			</div>
 		</div>
 	</div>
@@ -33,5 +56,75 @@
 export default {
 	name: 'cta-connect',
 	props: ['connect'],
+	data() {
+		return {
+			privateKey: '',
+			status: '',
+			isProcessing: false,
+			stripeConnectUrl: '',
+			counter: 3,
+			isDev: true
+		}
+	},
+	methods: {
+		changePage(page) {
+			this.currentPage = page
+		},
+		getHashKey() {
+			let signupForm = document.getElementById('connectForm');
+
+			console.log(this.connect.wpApiUrl)
+			this.isProcessing = true;
+			this.status = 'Creating secure connection with apazed.com'
+			let apiUrl = (this.isDev) ? 'http://apazed.test/api/app/signup' : 'https://apazed.com/api/app/signup';
+
+			// get from apazed.com
+			this.axios.get(apiUrl)
+				.then((response) => {
+					this.status = 'Authenticating connection'
+					console.log(response.data)
+					// get signup info encrypted
+					this.axios.get(this.connect.wpApiUrl, {
+						headers: {'X-WP-Nonce': this.connect.nonce, 'X-A-UID': response.data}
+						})
+						.then((response) => {
+							this.status = 'Sending signup info securely to apazed.com'
+							// send encrypted signup info to apazed
+							this.axios.post(apiUrl, {
+								signup: response.data
+								})
+								.then((response) => {
+									this.stripeConnectUrl = response.data;
+									this.redirectToStripe()
+								})
+								.catch(function (error) {
+									console.log(error)
+									signupForm.submit();
+								})
+						})
+						.catch(function (error) {
+							console.log(error)
+							signupForm.submit();
+						})
+				})
+				.catch(function (error) {
+					console.log(error)
+					signupForm.submit();
+				})
+		},
+		redirectToStripe() {
+			this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe in a second'
+
+            if(this.counter > 0) {
+                setTimeout(() => {
+                    this.counter -= 1
+                    this.redirectToStripe()
+                }, 1000)
+            }
+            else {
+            	location.href = this.stripeConnectUrl
+            }
+		}
+	},
 }
 </script>
