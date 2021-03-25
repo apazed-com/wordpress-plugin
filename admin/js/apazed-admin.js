@@ -2585,6 +2585,10 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: 'cta-connect',
   props: ['connect'],
@@ -2593,8 +2597,6 @@ __webpack_require__.r(__webpack_exports__);
       privateKey: '',
       status: '',
       isProcessing: false,
-      stripeConnectUrl: '',
-      counter: 3,
       isDev: true
     };
   },
@@ -2626,9 +2628,10 @@ __webpack_require__.r(__webpack_exports__);
           _this.axios.post(apiUrl, {
             signup: response.data
           }).then(function (response) {
-            _this.stripeConnectUrl = response.data;
-
-            _this.redirectToStripe();
+            _this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe.com';
+            setTimeout(function () {
+              location.href = response.data;
+            }, 2000);
           })["catch"](function (error) {
             console.log(error);
             signupForm.submit();
@@ -2641,21 +2644,6 @@ __webpack_require__.r(__webpack_exports__);
         console.log(error);
         signupForm.submit();
       });
-    },
-    redirectToStripe: function redirectToStripe() {
-      var _this2 = this;
-
-      this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe in a second';
-
-      if (this.counter > 0) {
-        setTimeout(function () {
-          _this2.counter -= 1;
-
-          _this2.redirectToStripe();
-        }, 1000);
-      } else {
-        location.href = this.stripeConnectUrl;
-      }
     }
   }
 });
@@ -6925,7 +6913,9 @@ var render = function() {
               "span",
               { staticClass: "block text-support1-600" },
               [
-                _vm._t("subheading", [_vm._v("Connect your site with Apazed.")])
+                _vm._t("subheading", [
+                  _vm._v("Connect your site with Apazed in a few seconds.")
+                ])
               ],
               2
             )
@@ -6976,7 +6966,7 @@ var render = function() {
           ]),
           _vm._v(" "),
           _vm.status === ""
-            ? _c("div", { staticClass: "ml-3 inline-flex" }, [
+            ? _c("div", { staticClass: "ml-6 inline-flex" }, [
                 _c(
                   "a",
                   {
@@ -7001,10 +6991,16 @@ var render = function() {
           ])
         ]),
         _vm._v(" "),
-        _c("div", { staticClass: "mt-4 flex" }, [
+        _c("div", { staticClass: "mt-6 text-xs text-neutral-400" }, [
+          _vm._v(
+            "\n\t\t\tClicking getting started will start an encrypted session with apazed.com, you'll be signed up with the\n\t\t\temail and website that is sent safely, you'll then be redirected to stripe.com to start getting paid.\n\t\t\tYou can also\n\t\t\t"
+          ),
           _c(
             "form",
-            { attrs: { id: "connectForm", action: _vm.connect.apazedConnect } },
+            {
+              staticClass: "inline",
+              attrs: { id: "connectForm", action: _vm.connect.apazedConnect }
+            },
             [
               _c("input", {
                 attrs: { type: "hidden", name: "name" },
@@ -7018,14 +7014,10 @@ var render = function() {
               _vm._v(" "),
               _c(
                 "button",
-                {
-                  staticClass:
-                    "inline-flex items-center justify-center text-xs text-neutral-600 underline",
-                  attrs: { type: "submit" }
-                },
+                { staticClass: "underline", attrs: { type: "submit" } },
                 [
                   _vm._v(
-                    "\n\t\t\t\t\tSign up directly with a different email at apazed.com\n\t\t\t\t"
+                    "\n\t\t\t\t\tsign up directly with a different email at apazed.com\n\t\t\t\t"
                   )
                 ]
               )

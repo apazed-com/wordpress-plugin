@@ -288,11 +288,14 @@ class Apazed_Admin
     public function get_signup_info($request)
     {
         $uid = $request->get_header('x-a-uid');
+
         $signup = new \stdClass();
-        $current_user = wp_get_current_user();
         $signup->uid = $uid;
         $signup->siteUrl = get_bloginfo( 'url' );
         $signup->blogName = get_bloginfo( 'name' );
+
+        // encrypt this info to prevent most mim sniffing
+        $current_user = wp_get_current_user();
         $signup->name = openssl_encrypt( $current_user->user_nicename, 'aes256', $uid, 0, 4242424242424242 );
         $signup->email = openssl_encrypt( $current_user->user_email, 'aes256', $uid, 0, 4242424242424242 );
         return $signup;

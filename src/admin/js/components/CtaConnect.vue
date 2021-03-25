@@ -4,7 +4,7 @@
 			<h2 class="text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl">
 				<span class="block"><slot name="heading">Ready to dive in?</slot></span>
 				<span class="block text-support1-600"><slot
-					name="subheading">Connect your site with Apazed.</slot></span>
+					name="subheading">Connect your site with Apazed in a few seconds.</slot></span>
 			</h2>
 			<div class="mt-8 flex">
 				<div class="inline-flex rounded-md shadow">
@@ -24,7 +24,7 @@
 						</span>
 					</button>
 				</div>
-				<div v-if="status === ''" class="ml-3 inline-flex">
+				<div v-if="status === ''" class="ml-6 inline-flex">
 					<a href="https://apazed.com"
 					   target="_blank"
 					   class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-support1-700 bg-support1-100 hover:bg-support1-200 hover:text-neutral-50">
@@ -32,20 +32,24 @@
 					</a>
 				</div>
 				<div class="ml-3 inline-flex">
-					<span class="inline-flex items-center justify-center px-5 py-3 text-neutral-500 font-medium animate-pulse">
+					<span
+						class="inline-flex items-center justify-center px-5 py-3 text-neutral-500 font-medium animate-pulse">
 						{{ status }}
 					</span>
 				</div>
 			</div>
-			<div class="mt-4 flex">
-				<form id="connectForm" :action="connect.apazedConnect">
+			<div class="mt-6 text-xs text-neutral-400">
+				Clicking getting started will start an encrypted session with apazed.com, you'll be signed up with the
+				email and website that is sent safely, you'll then be redirected to stripe.com to start getting paid.
+				You can also
+				<form id="connectForm" class="inline" :action="connect.apazedConnect">
 					<input type="hidden" name="name" :value="connect.blogName">
 					<input type="hidden" name="return_url"
 					       :value="connect.returnUrl">
 					<button
 						type="submit"
-						class="inline-flex items-center justify-center text-xs text-neutral-600 underline">
-						Sign up directly with a different email at apazed.com
+						class="underline">
+						sign up directly with a different email at apazed.com
 					</button>
 				</form>
 			</div>
@@ -61,8 +65,6 @@ export default {
 			privateKey: '',
 			status: '',
 			isProcessing: false,
-			stripeConnectUrl: '',
-			counter: 3,
 			isDev: true
 		}
 	},
@@ -86,16 +88,18 @@ export default {
 					// get signup info encrypted
 					this.axios.get(this.connect.wpApiUrl, {
 						headers: {'X-WP-Nonce': this.connect.nonce, 'X-A-UID': response.data}
-						})
+					})
 						.then((response) => {
 							this.status = 'Sending signup info securely to apazed.com'
 							// send encrypted signup info to apazed
 							this.axios.post(apiUrl, {
 								signup: response.data
-								})
+							})
 								.then((response) => {
-									this.stripeConnectUrl = response.data;
-									this.redirectToStripe()
+									this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe.com'
+									setTimeout(() => {
+										location.href = response.data
+									}, 2000)
 								})
 								.catch(function (error) {
 									console.log(error)
@@ -112,19 +116,6 @@ export default {
 					signupForm.submit();
 				})
 		},
-		redirectToStripe() {
-			this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe in a second'
-
-            if(this.counter > 0) {
-                setTimeout(() => {
-                    this.counter -= 1
-                    this.redirectToStripe()
-                }, 1000)
-            }
-            else {
-            	location.href = this.stripeConnectUrl
-            }
-		}
 	},
 }
 </script>
