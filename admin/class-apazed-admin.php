@@ -89,7 +89,7 @@ class Apazed_Admin
         $this->plugin_name = $plugin_name;
         $this->version = $version;
         $this->token = get_option( $this->option_prefix . 'token', false );
-        $this->token = false;
+        //$this->token = false;
 
         $this->setPayload();
         $this->setArticles();
@@ -136,7 +136,7 @@ class Apazed_Admin
         $this->payload->connect->apazedConnect = (APAZED_DEV) ? 'http://apazed.test/app/api/token' : 'https://apazed.com/app/api/token';
 
         if (!$this->token) {
-            $this->payload->connect->wpApiUrl = get_rest_url( null, 'apazed/v1/signup-info' );
+            $this->payload->connect->wpApiUrl = get_rest_url( null, 'apazed/v1/connection' );
             require_once( ABSPATH . 'wp-includes/pluggable.php' );
             $this->payload->connect->nonce = wp_create_nonce( 'wp_rest' );
         }
@@ -275,30 +275,45 @@ class Apazed_Admin
             'callback' => [$this, 'get_payments_forms'],
             'show_in_index' => false
         ) );
-        register_rest_route( 'apazed/v1', '/signup-info', array(
+        register_rest_route( 'apazed/v1', '/connection', array(
             'methods' => 'GET',
-            'callback' => [$this, 'get_signup_info'],
+            'callback' => [$this, 'get_connection_info'],
+            'show_in_index' => false
+        ) );
+        register_rest_route( 'apazed/v1', '/connection', array(
+            'methods' => 'POST',
+            'callback' => [$this, 'store_connection_info'],
             'show_in_index' => false
         ) );
     }
 
     /**
-     * @return stdClass
      */
-    public function get_signup_info($request)
+    public function get_connection_info($request)
     {
+
         $uid = $request->get_header('x-a-uid');
 
-        $signup = new \stdClass();
-        $signup->uid = $uid;
-        $signup->siteUrl = get_bloginfo( 'url' );
-        $signup->blogName = get_bloginfo( 'name' );
+        if ($uid) {
+            $signup = new \stdClass();
+            $signup->uid = $uid;
+            $signup->siteUrl = get_bloginfo( 'url' );
+            $signup->blogName = get_bloginfo( 'name' );
 
-        // encrypt this info to prevent most mim sniffing
-        $current_user = wp_get_current_user();
-        $signup->name = openssl_encrypt( $current_user->user_nicename, 'aes256', $uid, 0, 4242424242424242 );
-        $signup->email = openssl_encrypt( $current_user->user_email, 'aes256', $uid, 0, 4242424242424242 );
-        return $signup;
+            // encrypt this info to prevent most mim sniffing
+            $current_user = wp_get_current_user();
+            $signup->name = openssl_encrypt( $current_user->user_nicename, 'aes256', $uid, 0, 4242424242424242 );
+            $signup->email = openssl_encrypt( $current_user->user_email, 'aes256', $uid, 0, 4242424242424242 );
+            return $signup;
+        }
+
+        return false;
+
+    }
+    public function store_connection_info($request)
+    {
+        $signup = json_decode($request->get_body());
+        update_option( $this->option_prefix . 'token', sanitize_text_field( $signup->token ) );
     }
 
     /**

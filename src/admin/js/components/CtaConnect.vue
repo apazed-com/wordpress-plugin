@@ -39,19 +39,24 @@
 				</div>
 			</div>
 			<div class="mt-6 text-xs text-neutral-400">
-				Clicking getting started will start an encrypted session with apazed.com, you'll be signed up with the
-				email and website that is sent safely, you'll then be redirected to stripe.com to start getting paid.
-				You can also
-				<form id="connectForm" class="inline" :action="connect.apazedConnect">
-					<input type="hidden" name="name" :value="connect.blogName">
-					<input type="hidden" name="return_url"
-					       :value="connect.returnUrl">
-					<button
-						type="submit"
-						class="underline">
-						sign up directly with a different email at apazed.com
-					</button>
-				</form>
+
+				<p>Clicking getting started will start an encrypted session with apazed.com, you'll be signed up
+					automatically via this site's information and your user email. If necessary you'll be redirected to
+					finish the setup at stripe.com or apazed.com.</p>
+
+				<div class="block my-1">If you'd prefer to signup with a different email, you can
+					<form id="connectForm" class="inline" :action="connect.apazedConnect">
+						<input type="hidden" name="name" :value="connect.blogName">
+						<input type="hidden" name="return_url"
+						       :value="connect.returnUrl">
+						<button
+							type="submit"
+							class="underline">
+							sign up directly at apazed.com.
+						</button>
+					</form>
+				</div>
+
 			</div>
 		</div>
 	</div>
@@ -72,7 +77,7 @@ export default {
 		changePage(page) {
 			this.currentPage = page
 		},
-		getHashKey() {
+		getHashKey: function () {
 			let signupForm = document.getElementById('connectForm');
 
 			console.log(this.connect.wpApiUrl)
@@ -85,21 +90,38 @@ export default {
 				.then((response) => {
 					this.status = 'Authenticating connection'
 					console.log(response.data)
-					// get signup info encrypted
+					// get encrypted signup info
 					this.axios.get(this.connect.wpApiUrl, {
 						headers: {'X-WP-Nonce': this.connect.nonce, 'X-A-UID': response.data}
 					})
 						.then((response) => {
 							this.status = 'Sending signup info securely to apazed.com'
-							// send encrypted signup info to apazed
+							// send encrypted signup info to apazed for signup
 							this.axios.post(apiUrl, {
 								signup: response.data
 							})
 								.then((response) => {
-									this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe.com'
-									setTimeout(() => {
-										location.href = response.data
-									}, 2000)
+									if (response.data.error) {
+										this.status = response.data.error
+										setTimeout(() => {
+											signupForm.submit();
+										}, 2000)
+										return;
+									}
+									this.status = 'Signup complete, and verification email sent. Saving API Connection.'
+									this.axios.post(this.connect.wpApiUrl, response.data, {
+											headers: {'X-WP-Nonce': this.connect.nonce}
+										})
+										.then(() => {
+											this.status = 'Now redirecting you to Stripe.com.'
+											setTimeout(() => {
+												location.href = response.data.redirect
+											}, 2000)
+										})
+										.catch(function (error) {
+											console.log(error)
+											signupForm.submit();
+										})
 								})
 								.catch(function (error) {
 									console.log(error)

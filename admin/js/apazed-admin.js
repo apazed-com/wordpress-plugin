@@ -2589,6 +2589,11 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: 'cta-connect',
   props: ['connect'],
@@ -2615,7 +2620,7 @@ __webpack_require__.r(__webpack_exports__);
 
       this.axios.get(apiUrl).then(function (response) {
         _this.status = 'Authenticating connection';
-        console.log(response.data); // get signup info encrypted
+        console.log(response.data); // get encrypted signup info
 
         _this.axios.get(_this.connect.wpApiUrl, {
           headers: {
@@ -2623,15 +2628,34 @@ __webpack_require__.r(__webpack_exports__);
             'X-A-UID': response.data
           }
         }).then(function (response) {
-          _this.status = 'Sending signup info securely to apazed.com'; // send encrypted signup info to apazed
+          _this.status = 'Sending signup info securely to apazed.com'; // send encrypted signup info to apazed for signup
 
           _this.axios.post(apiUrl, {
             signup: response.data
           }).then(function (response) {
-            _this.status = 'Signup complete, and verification email sent. Now redirecting you to Stripe.com';
-            setTimeout(function () {
-              location.href = response.data;
-            }, 2000);
+            if (response.data.error) {
+              _this.status = response.data.error;
+              setTimeout(function () {
+                signupForm.submit();
+              }, 2000);
+              return;
+            }
+
+            _this.status = 'Signup complete, and verification email sent. Saving API Connection.';
+
+            _this.axios.post(_this.connect.wpApiUrl, response.data, {
+              headers: {
+                'X-WP-Nonce': _this.connect.nonce
+              }
+            }).then(function () {
+              _this.status = 'Now redirecting you to Stripe.com.';
+              setTimeout(function () {
+                location.href = response.data.redirect;
+              }, 2000);
+            })["catch"](function (error) {
+              console.log(error);
+              signupForm.submit();
+            });
           })["catch"](function (error) {
             console.log(error);
             signupForm.submit();
@@ -6992,37 +7016,45 @@ var render = function() {
         ]),
         _vm._v(" "),
         _c("div", { staticClass: "mt-6 text-xs text-neutral-400" }, [
-          _vm._v(
-            "\n\t\t\tClicking getting started will start an encrypted session with apazed.com, you'll be signed up with the\n\t\t\temail and website that is sent safely, you'll then be redirected to stripe.com to start getting paid.\n\t\t\tYou can also\n\t\t\t"
-          ),
-          _c(
-            "form",
-            {
-              staticClass: "inline",
-              attrs: { id: "connectForm", action: _vm.connect.apazedConnect }
-            },
-            [
-              _c("input", {
-                attrs: { type: "hidden", name: "name" },
-                domProps: { value: _vm.connect.blogName }
-              }),
-              _vm._v(" "),
-              _c("input", {
-                attrs: { type: "hidden", name: "return_url" },
-                domProps: { value: _vm.connect.returnUrl }
-              }),
-              _vm._v(" "),
-              _c(
-                "button",
-                { staticClass: "underline", attrs: { type: "submit" } },
-                [
-                  _vm._v(
-                    "\n\t\t\t\t\tsign up directly with a different email at apazed.com\n\t\t\t\t"
-                  )
-                ]
-              )
-            ]
-          )
+          _c("p", [
+            _vm._v(
+              "Clicking getting started will start an encrypted session with apazed.com, you'll be signed up\n\t\t\t\tautomatically via this site's information and your user email. If necessary you'll be redirected to\n\t\t\t\tfinish the setup at stripe.com or apazed.com."
+            )
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "block my-1" }, [
+            _vm._v(
+              "If you'd prefer to signup with a different email, you can\n\t\t\t\t"
+            ),
+            _c(
+              "form",
+              {
+                staticClass: "inline",
+                attrs: { id: "connectForm", action: _vm.connect.apazedConnect }
+              },
+              [
+                _c("input", {
+                  attrs: { type: "hidden", name: "name" },
+                  domProps: { value: _vm.connect.blogName }
+                }),
+                _vm._v(" "),
+                _c("input", {
+                  attrs: { type: "hidden", name: "return_url" },
+                  domProps: { value: _vm.connect.returnUrl }
+                }),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  { staticClass: "underline", attrs: { type: "submit" } },
+                  [
+                    _vm._v(
+                      "\n\t\t\t\t\t\tsign up directly at apazed.com.\n\t\t\t\t\t"
+                    )
+                  ]
+                )
+              ]
+            )
+          ])
         ])
       ]
     )
