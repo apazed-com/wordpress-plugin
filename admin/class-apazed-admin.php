@@ -90,9 +90,14 @@ class Apazed_Admin
         $this->version = $version;
         $this->token = get_option( $this->option_prefix . 'token', false );
         //$this->token = false;
+    }
 
+    public function admin_init()
+    {
         $this->setPayload();
         $this->setArticles();
+        $this->check_for_returned_token();
+
     }
 
     private function setPayload()
@@ -321,6 +326,9 @@ class Apazed_Admin
      */
     public function get_payments_forms()
     {
+        // no admin init.
+        $this->setPayload();
+
         if (!$this->token) {
             return [
                 'error' => [

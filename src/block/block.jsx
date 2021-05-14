@@ -30,12 +30,12 @@ const CONF = {
     cartCb: {
         key: 'apazed-payments-cart-check',
         label: __('Enable Cart', 'apazed'),
-        help: __('Without a cart the the customer will be directed directly to the payment page without the ability to purchase any other products or prices.', 'apazed'),
+        help: __('Without a cart, the customer will be sent directly to the payment page without the ability to purchase any other products or prices.', 'apazed'),
     },
     qtyCb: {
         key: 'apazed-payments-qty-check',
-        label: __('Quanity Updates', 'apazed'),
-        help: __('Allow the customer to purchase more than a single priced item.', 'apazed'),
+        label: __('Quantity Updates', 'apazed'),
+        help: __('Allow the customer to purchase more than one product/price.', 'apazed'),
     }
 };
 

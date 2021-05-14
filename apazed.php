@@ -8,9 +8,9 @@
  * @package           Apazed
  *
  * @wordpress-plugin
- * Plugin Name:       Apazed
+ * Plugin Name:       Apazed.com
  * Plugin URI:        https://apazed.com/wordpress
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+ * Description:       Easily create payment widgets and payment links for your site. No added fees. No development. No stress.
  * Version:           1.0.0
  * Author:            Apazed
  * Author URI:        https://apazed.com

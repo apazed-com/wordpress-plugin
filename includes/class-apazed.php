@@ -178,7 +178,7 @@ class Apazed
 
         $this->loader->add_action( 'admin_menu', $plugin_admin, 'add_menu' );
 
-        $this->loader->add_action( 'admin_init', $plugin_admin, 'check_for_returned_token' );
+        $this->loader->add_action( 'admin_init', $plugin_admin, 'admin_init' );
 
         $this->loader->add_action( 'rest_api_init', $plugin_admin, 'register_api_get_forms' );
 
